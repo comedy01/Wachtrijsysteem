@@ -11,7 +11,7 @@ detection_pin_add = board.get_pin('d:2:u')
 detection_pin_min = board.get_pin('d:3:u')
 
 attractie_verwerkingssnelheid = 10
-counter = 10
+counter = 0
 max_personen = 160
 
 rustig_bovengrens = max_personen * 0.7
@@ -53,15 +53,6 @@ def min_callback(released):
 def display_status(current_state):
     lcd.set_cursor(0, 0)
     lcd.print(f"Wachtrij {current_state:<5}")
-
-def sum_of_last_minutes(buffer, idx, m):
-    total = 0
-    length = len(buffer)
-    start = (idx - 1) % length
-    for _ in range(m):
-        total += buffer[start]
-        start = (start - 1) % length
-    return total
 
 def display_estimated_wait_time():
     wait_time = counter / float(attractie_verwerkingssnelheid)
@@ -130,6 +121,7 @@ try:
         if time.time() - last_update_time >= 3:
             check_count()
             last_update_time = time.time()
+
 except KeyboardInterrupt:
     print("Exit")
 finally:
