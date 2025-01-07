@@ -20,11 +20,6 @@ druk_bovengrens   = max_personen * 0.9
 start_time = time.time()
 processed_whole_minutes = 0
 
-
-arrivals_per_minute = [0]*10
-current_minute_arrivals = 0
-minute_index = 0
-
 def get_state(count):
     if count == 0:
         return "leeg"
@@ -36,11 +31,10 @@ def get_state(count):
         return "vol"
 
 def add_callback(released):
-    global counter, current_minute_arrivals
+    global counter
     if not released:
         if counter < max_personen:
             counter += 1
-            current_minute_arrivals += 1
             check_count()
 
 def min_callback(released):
@@ -84,8 +78,8 @@ def check_count():
     display_estimated_wait_time()
 
 def verwerk_per_minuut():
-    global processed_whole_minutes, current_minute_arrivals
-    global minute_index, counter
+    global processed_whole_minutes
+    global counter
 
     now = time.time()
     elapsed_minutes_exact = (now - start_time) / 60.0
@@ -98,12 +92,6 @@ def verwerk_per_minuut():
                 counter -= attractie_verwerkingssnelheid
             else:
                 counter = 0
-
-            arrivals_per_minute[minute_index] = current_minute_arrivals
-
-            minute_index = (minute_index + 1) % 10
-
-            current_minute_arrivals = 0
 
             processed_whole_minutes += 1
 
@@ -121,6 +109,7 @@ try:
         if time.time() - last_update_time >= 3:
             check_count()
             last_update_time = time.time()
+        counter += 0.1
 
 except KeyboardInterrupt:
     print("Exit")
