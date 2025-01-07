@@ -77,25 +77,6 @@ def check_count():
     display_status(current_state)
     display_estimated_wait_time()
 
-def verwerk_per_minuut():
-    global processed_whole_minutes
-    global counter
-
-    now = time.time()
-    elapsed_minutes_exact = (now - start_time) / 60
-    whole_minutes_now = int(elapsed_minutes_exact)
-
-    if whole_minutes_now > processed_whole_minutes:
-        delta_min = whole_minutes_now - processed_whole_minutes
-        for _ in range(delta_min):
-            if counter >= attractie_verwerkingssnelheid:
-                counter -= attractie_verwerkingssnelheid
-            else:
-                counter = 0
-            processed_whole_minutes += 1
-
-        check_count()
-
 detection_pin_add.register_callback(add_callback)
 detection_pin_min.register_callback(min_callback)
 
@@ -104,7 +85,6 @@ try:
     last_update_time = time.time()
     while True:
         time.sleep(0.5)
-        verwerk_per_minuut()
         if time.time() - last_update_time >= 3:
             check_count()
             last_update_time = time.time()
