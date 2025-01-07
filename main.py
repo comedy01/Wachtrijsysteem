@@ -48,6 +48,10 @@ def display_person_count():
     lcd.set_cursor(0, 1)
     lcd.print(f"Personen in wachtrij: {counter}")
 
+def display_status(current_state):
+    lcd.set_cursor(0, 0)
+    lcd.print(f"Wachtrij is {current_state}, geschatte wachttijd: ")
+
 def check_count():
     global counter
 
@@ -67,8 +71,7 @@ def check_count():
         board.digital[11].write(0)
 
     lcd.clear()
-    lcd.set_cursor(0, 0)
-    lcd.print(f"Wachtrij is {current_state}, geschatte wachttijd: ")
+    display_status(current_state)
     display_person_count()
 
 detection_pin_add.register_callback(add_callback)
