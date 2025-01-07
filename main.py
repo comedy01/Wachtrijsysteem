@@ -10,15 +10,25 @@ lcd = LCD(board)
 detection_pin_add = board.get_pin('d:2:u')
 detection_pin_min = board.get_pin('d:3:u')
 
-counter = 0
+attractie_verwerkingssnelheid = 10
+counter = 10
 max_personen = 160
 
 rustig_bovengrens = max_personen * 0.7
 druk_bovengrens   = max_personen * 0.9
 
+start_time = time.time()
+processed_whole_minutes = 0
+
+
+arrivals_per_minute = [0]*10
+current_minute_arrivals = 0
+minute_index = 0
 
 def get_state(count):
-    if count <= rustig_bovengrens:
+    if count == 0:
+        return "leeg"
+    elif count <= rustig_bovengrens:
         return "rustig"
     elif count <= druk_bovengrens:
         return "druk"
@@ -26,38 +36,46 @@ def get_state(count):
         return "vol"
 
 def add_callback(released):
-    global counter
+    global counter, current_minute_arrivals
     if not released:
         if counter < max_personen:
             counter += 1
+            current_minute_arrivals += 1
             check_count()
-        else:
-            print("Maximum aantal bereikt, niemand kan naar binnen.")
 
 def min_callback(released):
     global counter
     if not released:
         if counter > 0:
             counter -= 1
-            print(f"Personen in wachtrij: {counter}")
             check_count()
-        else:
-            print("Er zijn geen mensen om eruit te laten.")
-
-def display_person_count():
-    lcd.set_cursor(0, 1)
-    lcd.print(f"Personen in wachtrij: {counter}")
 
 def display_status(current_state):
     lcd.set_cursor(0, 0)
-    lcd.print(f"Wachtrij is {current_state}, geschatte wachttijd: ")
+    lcd.print(f"Wachtrij {current_state:<5}")
+
+def sum_of_last_minutes(buffer, idx, m):
+    total = 0
+    length = len(buffer)
+    start = (idx - 1) % length
+    for _ in range(m):
+        total += buffer[start]
+        start = (start - 1) % length
+    return total
+
+def display_estimated_wait_time():
+    wait_time = counter / float(attractie_verwerkingssnelheid)
+    lcd.set_cursor(0, 1)
+    lcd.print(f"Wachttijd:{wait_time:5.1f}m")
 
 def check_count():
-    global counter
-
     current_state = get_state(counter)
 
-    if current_state == "rustig":
+    if current_state == "leeg":
+        board.digital[13].write(0)
+        board.digital[12].write(0)
+        board.digital[11].write(1)
+    elif current_state == "rustig":
         board.digital[13].write(0)
         board.digital[12].write(0)
         board.digital[11].write(1)
@@ -72,18 +90,47 @@ def check_count():
 
     lcd.clear()
     display_status(current_state)
-    display_person_count()
+    display_estimated_wait_time()
+
+def verwerk_per_minuut():
+    global processed_whole_minutes, current_minute_arrivals
+    global minute_index, counter
+
+    now = time.time()
+    elapsed_minutes_exact = (now - start_time) / 60.0
+    whole_minutes_now = int(elapsed_minutes_exact)
+
+    if whole_minutes_now > processed_whole_minutes:
+        delta_min = whole_minutes_now - processed_whole_minutes
+        for _ in range(delta_min):
+            if counter >= attractie_verwerkingssnelheid:
+                counter -= attractie_verwerkingssnelheid
+            else:
+                counter = 0
+
+            arrivals_per_minute[minute_index] = current_minute_arrivals
+
+            minute_index = (minute_index + 1) % 10
+
+            current_minute_arrivals = 0
+
+            processed_whole_minutes += 1
+
+        check_count()
 
 detection_pin_add.register_callback(add_callback)
 detection_pin_min.register_callback(min_callback)
 
 try:
     check_count()
+    last_update_time = time.time()
     while True:
-        time.sleep(3)
-        check_count()
-
+        time.sleep(0.5)
+        verwerk_per_minuut()
+        if time.time() - last_update_time >= 3:
+            check_count()
+            last_update_time = time.time()
 except KeyboardInterrupt:
-    print('Exit')
+    print("Exit")
 finally:
     board.exit()
