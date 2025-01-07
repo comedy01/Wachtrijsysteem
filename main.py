@@ -82,7 +82,7 @@ def verwerk_per_minuut():
     global counter
 
     now = time.time()
-    elapsed_minutes_exact = (now - start_time) / 60.0
+    elapsed_minutes_exact = (now - start_time) / 60
     whole_minutes_now = int(elapsed_minutes_exact)
 
     if whole_minutes_now > processed_whole_minutes:
@@ -92,7 +92,6 @@ def verwerk_per_minuut():
                 counter -= attractie_verwerkingssnelheid
             else:
                 counter = 0
-
             processed_whole_minutes += 1
 
         check_count()
@@ -109,7 +108,6 @@ try:
         if time.time() - last_update_time >= 3:
             check_count()
             last_update_time = time.time()
-        counter += 0.1
 
 except KeyboardInterrupt:
     print("Exit")
