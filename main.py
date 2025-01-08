@@ -14,12 +14,9 @@ attractie_verwerkingssnelheid = 10
 counter = 0
 max_personen = 160
 
-rustig_bovengrens = max_personen * 0.7
-druk_bovengrens   = max_personen * 0.9
-
-processed_whole_minutes = 0
-
 def get_state(count):
+    rustig_bovengrens = max_personen * 0.7
+    druk_bovengrens   = max_personen * 0.9
     if count == 0:
         return "leeg"
     elif count <= rustig_bovengrens:
