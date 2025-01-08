@@ -17,7 +17,6 @@ max_personen = 160
 rustig_bovengrens = max_personen * 0.7
 druk_bovengrens   = max_personen * 0.9
 
-start_time = time.time()
 processed_whole_minutes = 0
 
 def get_state(count):
